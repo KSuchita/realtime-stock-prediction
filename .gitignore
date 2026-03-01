@@ -1,0 +1,7 @@
+__pycache__/
+data/
+logs.txt
+*.pkl
+*.joblib
+venv/
+.env
