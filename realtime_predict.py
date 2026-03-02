@@ -24,14 +24,24 @@ model = joblib.load(MODEL_PATH)
 
 print(f"Fetching real-time data for {STOCK_SYMBOL}...")
 
-# Download last 10 days to be safe
-df = yf.download(STOCK_SYMBOL, period="10d", interval="1d")
+# Download last 30 days (needed for MA_10)
+df = yf.download(STOCK_SYMBOL, period="30d", interval="1d")
 
 if df.empty:
     print("No data fetched. Exiting.")
     sys.exit()
 
 df = df.dropna()
+
+# ----------------------------
+# Feature Engineering (SAME AS TRAINING)
+# ----------------------------
+df['Prev_Close'] = df['Close'].shift(1)
+df['MA_5'] = df['Close'].rolling(5).mean()
+df['MA_10'] = df['Close'].rolling(10).mean()
+df['Daily_Return'] = df['Close'].pct_change()
+
+df.dropna(inplace=True)
 
 # ----------------------------
 # Check if today is trading day
@@ -53,13 +63,12 @@ if os.path.exists(PREDICTION_FILE):
         sys.exit()
 
 # ----------------------------
-# Prepare Features
+# Prepare Features (MATCH TRAINING)
 # ----------------------------
 last_row = df.iloc[-1:]
 
+X = last_row[['Prev_Close', 'MA_5', 'MA_10', 'Daily_Return']]
 last_close = last_row["Close"].iloc[0].item()
-
-X = last_row[["Open", "High", "Low", "Close", "Volume"]]
 
 predicted_price = model.predict(X)[0]
 
