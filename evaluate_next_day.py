@@ -21,10 +21,6 @@ evaluation_date = next_trading_day(prediction_date)
 
 df = yf.download(STOCK_SYMBOL, period="5d", interval="1d")
 
-if df.empty:
-    print("Market data not available yet.")
-    exit()
-
 df = df.reset_index()
 df["Date"] = pd.to_datetime(df["Date"]).dt.date
 

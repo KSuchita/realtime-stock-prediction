@@ -25,16 +25,21 @@ df = yf.download(
 
 df = clean_stock_data(df)
 
+# -----------------------------
 # Feature Engineering
+# -----------------------------
 df['Prev_Close'] = df['Close'].shift(1)
 df['MA_5'] = df['Close'].rolling(5).mean()
 df['MA_10'] = df['Close'].rolling(10).mean()
 df['Daily_Return'] = df['Close'].pct_change()
 
+# TARGET = NEXT DAY CLOSE
+df['Target'] = df['Close'].shift(-1)
+
 df.dropna(inplace=True)
 
 X = df[['Prev_Close', 'MA_5', 'MA_10', 'Daily_Return']]
-y = df['Close'].values.ravel()   # FIXED warning
+y = df['Target'].values.ravel()
 
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, shuffle=False
@@ -59,5 +64,6 @@ print(f"R2 Score: {r2:.4f}")
 print(f"RMSE: {rmse:.4f}")
 
 joblib.dump(model, MODEL_NAME)
+
 print(f"Model saved as {MODEL_NAME}")
 print("STEP COMPLETED SUCCESSFULLY")
