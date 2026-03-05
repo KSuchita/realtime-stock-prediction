@@ -25,24 +25,32 @@ df = yf.download(
 
 df = clean_stock_data(df)
 
-# -----------------------------
+# ----------------------------
 # Feature Engineering
-# -----------------------------
+# ----------------------------
+
 df['Prev_Close'] = df['Close'].shift(1)
+
 df['MA_5'] = df['Close'].rolling(5).mean()
+
 df['MA_10'] = df['Close'].rolling(10).mean()
+
 df['Daily_Return'] = df['Close'].pct_change()
 
-# TARGET = NEXT DAY CLOSE
+# TARGET = TOMORROW CLOSE PRICE
 df['Target'] = df['Close'].shift(-1)
 
 df.dropna(inplace=True)
 
-X = df[['Prev_Close', 'MA_5', 'MA_10', 'Daily_Return']]
-y = df['Target'].values.ravel()
+# Features
+X = df[['Prev_Close','MA_5','MA_10','Daily_Return']]
 
+# Target
+y = df['Target']
+
+# Train Test Split
 X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.2, shuffle=False
+    X,y,test_size=0.2,shuffle=False
 )
 
 model = RandomForestRegressor(
@@ -52,18 +60,20 @@ model = RandomForestRegressor(
     n_jobs=-1
 )
 
-model.fit(X_train, y_train)
+model.fit(X_train,y_train)
 
+# Predictions
 y_pred = model.predict(X_test)
 
-r2 = r2_score(y_test, y_pred)
-rmse = np.sqrt(mean_squared_error(y_test, y_pred))
+r2 = r2_score(y_test,y_pred)
+rmse = np.sqrt(mean_squared_error(y_test,y_pred))
 
 print("\nTraining completed")
 print(f"R2 Score: {r2:.4f}")
 print(f"RMSE: {rmse:.4f}")
 
-joblib.dump(model, MODEL_NAME)
+# Save Model
+joblib.dump(model,MODEL_NAME)
 
 print(f"Model saved as {MODEL_NAME}")
 print("STEP COMPLETED SUCCESSFULLY")
