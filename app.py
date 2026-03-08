@@ -18,55 +18,76 @@ def get_comparison_data():
     if df.empty:
         return None, None, None
     
-    # 2. Force Positional Extraction (3 is Close)
+    # 2. Fix Column Names
     df.columns = [col[0] if isinstance(col, tuple) else col for col in df.columns]
-    raw_close = df.iloc[:, 3].values.flatten()
     
-    # 3. Rebuild clean dataframe
-    clean_df = pd.DataFrame({'Close': raw_close}, index=df.index)
+    # 3. Rebuild clean dataframe with absolute prices
+    clean_df = pd.DataFrame({'Close': df.iloc[:, 3].values.flatten()}, index=df.index)
     clean_df['Prev_Close'] = clean_df['Close'].shift(1)
     clean_df['MA_5'] = clean_df['Close'].rolling(5).mean()
     clean_df['MA_10'] = clean_df['Close'].rolling(10).mean()
     clean_df['Daily_Return'] = clean_df['Close'].pct_change()
+    clean_df = clean_df.dropna()
     
-    model_df = clean_df.dropna()
-    
-    # 4. Predict current & historical for comparison
+    # 4. Generate Historical Predictions vs Actuals
     model = joblib.load(MODEL_PATH)
     
-    # Get last 5 days for comparison
-    comparison_slice = model_df.tail(6) 
-    actual_prices = comparison_slice['Close'].iloc[1:].values # Last 5 actuals
+    # We take the last 5 days
+    history = clean_df.tail(5)
+    dates = [d.strftime('%d %b') for d in history.index]
+    actual_prices = history['Close'].values.tolist()
     
-    # Generate predictions for those same 5 days using previous day's data
-    preds = []
-    for i in range(len(comparison_slice) - 1):
-        row = comparison_slice[['Prev_Close', 'MA_5', 'MA_10', 'Daily_Return']].iloc[i:i+1]
-        preds.append(model.predict(row.values)[0])
-    
-    # Current Prediction (for Monday)
-    last_row = model_df.iloc[-1:]
-    monday_pred = model.predict(last_row[['Prev_Close', 'MA_5', 'MA_10', 'Daily_Return']].values)[0]
-    current_price = last_row["Close"].iloc[0]
+    # Calculate what the model predicted for THESE specific days
+    # To predict 'Today', the model uses 'Yesterday's' features
+    predicted_prices = []
+    # Get a slightly larger slice to access previous day features
+    full_slice = clean_df.tail(6) 
+    for i in range(5):
+        features = full_slice[['Prev_Close', 'MA_5', 'MA_10', 'Daily_Return']].iloc[i:i+1].values
+        pred = model.predict(features)[0]
+        predicted_prices.append(round(float(pred), 2))
 
-    # 5. Create COMPARATIVE BAR GRAPH
-    dates = [d.strftime('%b %d') for d in model_df.index[-5:]]
+    # Current Prediction for Monday
+    last_features = clean_df[['Prev_Close', 'MA_5', 'MA_10', 'Daily_Return']].iloc[-1:].values
+    monday_pred = round(float(model.predict(last_features)[0]), 2)
+    current_price = round(float(clean_df['Close'].iloc[-1]), 2)
+
+    # 5. Create Grouped Bar Chart
+    fig = go.Figure()
     
-    fig = go.Figure(data=[
-        go.Bar(name='Actual Price', x=dates, y=actual_prices, marker_color='#0d6efd'),
-        go.Bar(name='Predicted Price', x=dates, y=preds[1:], marker_color='#198754')
-    ])
+    # Trace for Actual Prices
+    fig.add_trace(go.Bar(
+        x=dates,
+        y=actual_prices,
+        name='Actual Price',
+        marker_color='#0d6efd' # Blue
+    ))
     
+    # Trace for Predicted Prices
+    fig.add_trace(go.Bar(
+        x=dates,
+        y=predicted_prices,
+        name='Predicted Price',
+        marker_color='#198754' # Green
+    ))
+
+    # Zoom Y-axis to see small differences (e.g., between 1400 and 1410)
+    y_min = min(min(actual_prices), min(predicted_prices)) * 0.99
+    y_max = max(max(actual_prices), max(predicted_prices)) * 1.01
+
     fig.update_layout(
-        title="Actual vs Predicted Price (Last 5 Sessions)",
-        barmode='group',
+        title=f"Comparison: Actual vs Predicted (Last 5 Sessions)",
+        barmode='group', # This forces them side-by-side
+        xaxis_title="Date",
+        yaxis_title="Price (₹)",
+        yaxis=dict(range=[y_min, y_max]),
         template="plotly_white",
-        yaxis=dict(range=[min(actual_prices)*0.98, max(actual_prices)*1.02]) # Zoom in on the 1400 range
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
     )
-    
+
     graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
     
-    return round(float(current_price), 2), round(float(monday_pred), 2), graphJSON
+    return current_price, monday_pred, graphJSON
 
 @app.route('/')
 def index():
