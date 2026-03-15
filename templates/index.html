@@ -5,61 +5,73 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Prediction Scorecard</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <style>
-        body { background-color: #f0f2f5; font-family: 'Segoe UI', sans-serif; }
-        .dashboard-container { max-width: 800px; margin: 40px auto; }
-        .card { border: none; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
-        .scorecard-actual { background: #e7f1ff; border-radius: 15px; padding: 20px; }
-        .scorecard-pred { background: #f8f9fa; border-radius: 15px; padding: 20px; }
-        .next-pred-box { background: #ffffff; border-left: 8px solid #198754; }
-        .label-text { font-size: 0.75rem; font-weight: 700; letter-spacing: 1px; }
+        body { background-color: #f4f7f6; font-family: 'Segoe UI', sans-serif; }
+        .dashboard-container { max-width: 700px; margin: 40px auto; }
+        .card { border: none; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+        .weekend-notice { background-color: #fff3cd; border-left: 5px solid #ffc107; color: #856404; padding: 15px; border-radius: 10px; margin-bottom: 20px; font-size: 0.9rem; }
+        .scorecard-actual { background: #ffffff; border-top: 5px solid #0d6efd; border-radius: 15px; padding: 25px; }
+        .scorecard-pred { background: #ffffff; border-top: 5px solid #6c757d; border-radius: 15px; padding: 25px; }
+        .next-pred-box { background: #198754; color: white; padding: 30px; border-radius: 20px; }
+        .insight-card { border-radius: 15px; padding: 20px; background: #fff; height: 100%; border-left: 5px solid; }
+        .label-text { font-size: 0.75rem; font-weight: 700; letter-spacing: 1px; margin-bottom: 5px; }
     </style>
 </head>
 <body>
     <div class="container dashboard-container">
         {% if data %}
+        
+        {% if data.is_weekend %}
+        <div class="weekend-notice shadow-sm">
+            <strong>Weekend Mode Active:</strong> Market is closed. Analysis based on Friday's data for <strong>Monday, {{ data.target_date }}</strong>.
+        </div>
+        {% endif %}
+
         <div class="card p-4 mb-4">
-            <h5 class="fw-bold mb-4 text-center">Performance Review: {{ data.run_date }}</h5>
+            <h6 class="text-center text-muted mb-4 fw-bold">Performance Review: {{ data.run_date }}</h6>
             <div class="row g-3 text-center">
                 <div class="col-md-6">
-                    <div class="scorecard-actual">
-                        <p class="label-text text-primary mb-1 text-uppercase">Today's Actual Close</p>
-                        <h2 class="fw-bold">₹{{ data.today_actual }}</h2>
-                    </div>
-                </div>
-                <div class="col-md-6">
                     <div class="scorecard-pred">
-                        <p class="label-text text-secondary mb-1 text-uppercase">Yesterday's Prediction</p>
+                        <p class="label-text text-uppercase text-secondary">Yesterday's Prediction</p>
                         <h2 class="fw-bold {{ data.status_color }}">₹{{ data.yesterday_pred }}</h2>
                     </div>
                 </div>
+                <div class="col-md-6">
+                    <div class="scorecard-actual">
+                        <p class="label-text text-uppercase text-primary">Today's Actual Close</p>
+                        <h2 class="fw-bold">₹{{ data.today_actual }}</h2>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="card p-4 next-pred-box mb-4">
-            <div class="row align-items-center">
-                <div class="col-md-7">
-                    <p class="label-text text-success mb-1 text-uppercase">New AI Prediction For {{ data.target_date }}</p>
-                    <h1 class="display-4 fw-bold text-success">₹{{ data.next_pred }}</h1>
+        <div class="card next-pred-box text-center mb-4">
+            <p class="label-text text-uppercase opacity-75">AI Forecast For {{ data.target_date }}</p>
+            <h1 class="display-3 fw-bold">₹{{ data.next_pred }}</h1>
+            <p class="small opacity-75 mt-2">Analysis for {{ data.symbol }}</p>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="insight-card border-{{ data.advice_theme }} shadow-sm">
+                    <p class="label-text text-uppercase text-{{ data.advice_theme }}">For New Investors</p>
+                    <p class="fw-bold mb-0 text-dark">{{ data.new_user_advice }}</p>
                 </div>
-                <div class="col-md-5">
-                    <div id="miniChart"></div>
+            </div>
+            <div class="col-md-6">
+                <div class="insight-card border-{{ data.advice_theme }} shadow-sm">
+                    <p class="label-text text-uppercase text-{{ data.advice_theme }}">For Existing Holders</p>
+                    <p class="fw-bold mb-0 text-dark">{{ data.old_user_advice }}</p>
                 </div>
             </div>
         </div>
+
         {% else %}
-        <div class="alert alert-warning text-center">
-            No prediction data found. Please run <b>realtime_predict.py</b> first.
+        <div class="alert alert-info text-center mt-5">
+            <h4>No Data Found</h4>
+            <p>Please run <code>python realtime_predict.py</code>.</p>
         </div>
         {% endif %}
     </div>
-
-    <script>
-        {% if graphJSON %}
-        var graphs = {{ graphJSON | safe }};
-        Plotly.newPlot('miniChart', graphs.data, graphs.layout, {displayModeBar: false, responsive: true});
-        {% endif %}
-    </script>
 </body>
 </html>
