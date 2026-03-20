@@ -8,119 +8,39 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
-        
-        :root {
-            --accent: #4F46E5;
-            --bullish: #059669;
-            --bearish: #E11D48;
-            --neutral-sage: #64748B;
-        }
-
-        body { 
-            background: #F8FAFC; 
-            font-family: 'Plus Jakarta Sans', sans-serif; 
-            color: #1E293B;
-            min-height: 100vh;
-        }
-
-        .sidebar {
-            width: 300px;
-            height: 100vh;
-            position: fixed;
-            background: white;
-            border-right: 1px solid #E2E8F0;
-            padding: 3rem 1.5rem;
-            z-index: 100;
-        }
-
+        :root { --accent: #4F46E5; --bullish: #059669; --bearish: #E11D48; --neutral-sage: #64748B; }
+        body { background: #F8FAFC; font-family: 'Plus Jakarta Sans', sans-serif; color: #1E293B; min-height: 100vh; }
+        .sidebar { width: 300px; height: 100vh; position: fixed; background: white; border-right: 1px solid #E2E8F0; padding: 3rem 1.5rem; z-index: 100; }
         .main-content { margin-left: 300px; padding: 4rem; }
-
-        /* EQUAL HEIGHT LOGIC */
-        .equal-height-row {
-            display: flex;
-            align-items: stretch;
-        }
-
-        .bento-card {
-            background: white;
-            border-radius: 28px;
-            border: 1px solid rgba(226, 232, 240, 0.7);
-            border-top: 5px solid var(--accent); /* Consistent Violet Top Line */
-            padding: 2.5rem;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.03);
-            height: 100%; 
-            display: flex;
-            flex-direction: column;
-        }
-
-        .price-text {
-            font-weight: 800;
-            letter-spacing: -1px;
-            color: #0F172A;
-        }
-
-        .yest-price {
-            font-size: 1.5rem;
-            color: #0F172A !important; 
-        }
-
-        .current-price {
-            font-size: 1.8rem;
-        }
-
-        .target-price {
-            font-size: 1.8rem;
-            color: var(--accent);
-        }
-
-        .badge-lux {
-            padding: 0.6rem 1.2rem;
-            border-radius: 12px;
-            font-weight: 700;
-            font-size: 0.75rem;
-            text-transform: uppercase;
-        }
-
+        .equal-height-row { display: flex; align-items: stretch; }
+        .bento-card { background: white; border-radius: 28px; border: 1px solid rgba(226, 232, 240, 0.7); border-top: 5px solid var(--accent); padding: 2.5rem; box-shadow: 0 10px 30px rgba(0,0,0,0.03); height: 100%; display: flex; flex-direction: column; }
+        .price-text { font-weight: 800; letter-spacing: -1px; color: #0F172A; }
+        .yest-price { font-size: 1.5rem; color: #0F172A !important; }
+        .current-price { font-size: 1.8rem; }
+        .target-price { font-size: 1.8rem; color: var(--accent); }
+        .badge-lux { padding: 0.6rem 1.2rem; border-radius: 12px; font-weight: 700; font-size: 0.75rem; text-transform: uppercase; }
         .bg-success { background-color: #ECFDF5 !important; color: var(--bullish) !important; }
         .bg-danger { background-color: #FFF1F2 !important; color: var(--bearish) !important; }
         .bg-neutral { background-color: #F1F5F9 !important; color: var(--neutral-sage) !important; border: 1px solid #E2E8F0; }
-
-        .plan-box {
-            background: #F8FAFC;
-            border-radius: 20px;
-            padding: 1.8rem;
-            border-left: 5px solid #CBD5E1;
-            margin-top: auto;
-        }
-
-        .form-select {
-            border-radius: 12px;
-            padding: 0.75rem;
-            border: 1px solid #E2E8F0;
-            font-weight: 600;
-        }
+        .plan-box { background: #F8FAFC; border-radius: 20px; padding: 1.8rem; border-left: 5px solid #CBD5E1; margin-top: auto; }
+        .form-select { border-radius: 12px; padding: 0.75rem; border: 1px solid #E2E8F0; font-weight: 600; }
     </style>
 </head>
 <body>
-
     <aside class="sidebar">
-        <h3 class="fw-extrabold mb-5 text-primary" style="letter-spacing: -1px;">Stock Price</h3>
+        <h3 class="fw-extrabold mb-5 text-primary">Stock Price</h3>
         <form action="/" method="get">
             <div class="mb-4">
                 <label class="small fw-bold text-muted mb-2">PRIMARY ASSET</label>
                 <select name="ticker" class="form-select mb-3" onchange="this.form.submit()">
-                    {% for t in data.tickers %}
-                    <option value="{{ t }}" {% if t == data.main.symbol %}selected{% endif %}>{{ t }}</option>
-                    {% endfor %}
+                    {% for t in data.tickers %}<option value="{{ t }}" {% if t == data.main.symbol %}selected{% endif %}>{{ t }}</option>{% endfor %}
                 </select>
             </div>
             <div class="mb-4">
                 <label class="small fw-bold text-muted mb-2">COMPARISON</label>
                 <select name="compare" class="form-select" onchange="this.form.submit()">
                     <option value="None">None</option>
-                    {% for t in data.tickers %}
-                    <option value="{{ t }}" {% if data.comp and t == data.comp.symbol %}selected{% endif %}>{{ t }}</option>
-                    {% endfor %}
+                    {% for t in data.tickers %}<option value="{{ t }}" {% if data.comp and t == data.comp.symbol %}selected{% endif %}>{{ t }}</option>{% endfor %}
                 </select>
             </div>
         </form>
@@ -137,11 +57,8 @@
                 <div class="bento-card">
                     <div class="d-flex justify-content-between align-items-center mb-5">
                         <h2 class="mb-0 fw-bold">{{ data.main.symbol }}</h2>
-                        <div class="badge-lux bg-{{ data.main.theme }}">
-                            {{ data.main.rating }}
-                        </div>
+                        <div class="badge-lux bg-{{ data.main.theme }}">{{ data.main.rating }}</div>
                     </div>
-                    
                     <div class="row mb-5 text-center">
                         <div class="col-4 border-end">
                             <span class="small fw-bold text-muted">YESTERDAY PRED.</span>
@@ -152,11 +69,10 @@
                             <div class="price-text current-price">₹{{ data.main.actual }}</div>
                         </div>
                         <div class="col-4">
-                            <span class="small fw-bold text-muted">NEXT TRADING DAY</span>
+                            <span class="small fw-bold text-muted">NEXT TRADING DAY: {{ data.main.target_date }}</span>
                             <div class="price-text target-price">₹{{ data.main.pred }}</div>
                         </div>
                     </div>
-
                     <div class="plan-box">
                         <h6 class="fw-bold mb-3"><i class="bi bi-cpu me-2"></i>Analysis</h6>
                         <p class="small text-secondary mb-4" style="line-height: 1.8; font-weight: 500;">{{ data.main.plan }}</p>
@@ -173,7 +89,6 @@
                         <h2 class="mb-0 fw-bold">{{ data.comp.symbol }}</h2>
                         <div class="badge-lux bg-{{ data.comp.theme }}">{{ data.comp.rating }}</div>
                     </div>
-
                     <div class="row mb-5 text-center">
                         <div class="col-4 border-end">
                             <span class="small fw-bold text-muted">YESTERDAY PRED.</span>
@@ -184,16 +99,14 @@
                             <div class="price-text current-price">₹{{ data.comp.actual }}</div>
                         </div>
                         <div class="col-4">
-                            <span class="small fw-bold text-muted">NEXT TRADING DAY</span>
+                            <span class="small fw-bold text-muted">NEXT TRADING DAY: {{ data.comp.target_date }}</span>
                             <div class="price-text target-price">₹{{ data.comp.pred }}</div>
                         </div>
                     </div>
-
                     <div class="plan-box">
                         <h6 class="fw-bold mb-3">Analysis</h6>
                         <p class="small text-secondary mb-4" style="line-height: 1.8; font-weight: 500;">{{ data.comp.plan }}</p>
-                        <hr>
-                        <div class="fw-bold" style="color: var(--accent);">Forecast Velocity: {{ data.comp.pct }}%</div>
+                        <hr><div class="fw-bold" style="color: var(--accent);">Forecast Velocity: {{ data.comp.pct }}%</div>
                     </div>
                 </div>
             </div>
