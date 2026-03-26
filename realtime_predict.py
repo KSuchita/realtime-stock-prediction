@@ -15,7 +15,6 @@ Path("data").mkdir(exist_ok=True)
 
 def get_next_trading_day(reference_date):
     nse = mcal.get_calendar('NSE')
-    # Look ahead 10 days to find the next valid session
     schedule = nse.schedule(start_date=reference_date, end_date=reference_date + timedelta(days=10))
     if schedule.empty:
         return reference_date + timedelta(days=1)
@@ -26,37 +25,52 @@ def run_multi_predictions():
     today_date = today_dt.date()
     nse = mcal.get_calendar('NSE')
     
-    # Check if market is open today
-    is_open_today = not nse.schedule(start_date=today_date, end_date=today_date).empty
+    # Holiday Check
+    schedule_today = nse.schedule(start_date=today_date, end_date=today_date)
+    is_open_today = not schedule_today.empty
     
+    if not is_open_today:
+        print(f"--- NOTICE: {today_date} IS A MARKET HOLIDAY ---")
+        target_date = get_next_trading_day(today_date)
+        print(f"Predicting for Next Trading Session: {target_date}")
+    else:
+        print(f"Starting Multi-Stock Analysis for {today_date}...")
+
     all_results = []
-    print(f"Starting Multi-Stock Analysis for {today_date}...")
 
     for symbol in TICKERS:
+        print(f"--- Analyzing {symbol} ---")
+        
         model_path = os.path.join(MODEL_DIR, f"{symbol}_model.pkl")
-        if not os.path.exists(model_path): continue
+        if not os.path.exists(model_path):
+            print(f"Skipping {symbol}: Model file not found.")
+            continue
         
         model = joblib.load(model_path)
+        # Download slightly more data to ensure MAs are calculated correctly
         df = yf.download(symbol, period="60d", interval="1d", progress=False)
-        if df.empty: continue
+        
+        if df.empty:
+            print(f"Skipping {symbol}: No data found.")
+            continue
 
         df.columns = [col[0] if isinstance(col, tuple) else col for col in df.columns]
+        
+        # Feature Engineering
         df['Prev_Close'] = df['Close'].shift(1)
         df['MA_5'] = df['Close'].rolling(5).mean()
         df['MA_10'] = df['Close'].rolling(10).mean()
         df['Daily_Return'] = df['Close'].pct_change()
         df = df.dropna()
 
-        # HOLIDAY LOGIC
         last_data_date = df.index[-1].date()
         
+        # Logic for Target Date
         if not is_open_today:
-            # If holiday, target is the next available session
             target_date = get_next_trading_day(today_date)
         else:
-            # If market is open, check if we are post 3:30 PM
             if today_dt.hour < 15 or (today_dt.hour == 15 and today_dt.minute < 30):
-                target_date = today_date # Prediction is for today's close
+                target_date = today_date 
             else:
                 target_date = get_next_trading_day(today_date + timedelta(days=1))
 
@@ -69,6 +83,7 @@ def run_multi_predictions():
         yesterday_pred = "N/A"
         if os.path.exists(PREDICTION_FILE):
             old_preds = pd.read_csv(PREDICTION_FILE)
+            # Match the prediction made for 'last_data_date'
             match = old_preds[(old_preds["Ticker"] == symbol) & 
                               (old_preds["Target_Date"] == last_data_date.strftime("%Y-%m-%d"))]
             if not match.empty:
@@ -83,6 +98,7 @@ def run_multi_predictions():
             "Prev_Prediction_For_Today": yesterday_pred
         })
 
+    # Save logic
     new_results_df = pd.DataFrame(all_results)
     if os.path.exists(PREDICTION_FILE):
         old_df = pd.read_csv(PREDICTION_FILE)
@@ -92,7 +108,7 @@ def run_multi_predictions():
         final_df = new_results_df
     
     final_df.to_csv(PREDICTION_FILE, index=False)
-    print(f"Success! Predictions saved.")
+    print(f"\nSuccess! Predictions for {len(all_results)} stocks saved to {PREDICTION_FILE}")
 
 if __name__ == "__main__":
     run_multi_predictions()
