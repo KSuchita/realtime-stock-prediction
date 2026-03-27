@@ -24,14 +24,7 @@
         .bg-neutral { background-color: #F1F5F9 !important; color: var(--neutral-sage) !important; border: 1px solid #E2E8F0; }
         .plan-box { background: #F8FAFC; border-radius: 20px; padding: 1.8rem; border-left: 5px solid #CBD5E1; margin-top: auto; }
         .form-select { border-radius: 12px; padding: 0.75rem; border: 1px solid #E2E8F0; font-weight: 600; }
-        
-        /* Custom alert style for holiday */
-        .holiday-banner {
-            background-color: #FFFBEB;
-            border: 1px solid #FEF3C7;
-            border-radius: 20px;
-            color: #92400E;
-        }
+        .holiday-alert { background: #FFFBEB; border: 1px solid #FEF3C7; color: #92400E; border-radius: 20px; padding: 1.5rem; margin-bottom: 2rem; display: flex; align-items: center; }
     </style>
 </head>
 <body>
@@ -56,11 +49,11 @@
 
     <main class="main-content">
         {% if data.is_holiday %}
-        <div class="holiday-banner p-4 mb-5 d-flex align-items-center shadow-sm">
-            <i class="bi bi-calendar-x-fill me-3 fs-3"></i>
+        <div class="holiday-alert">
+            <i class="bi bi-info-circle-fill fs-4 me-3"></i>
             <div>
-                <h6 class="mb-0 fw-bold">Market is Closed Today</h6>
-                <p class="small mb-0">Analysis is focused on the next trading session: <strong>{{ data.main.target_date }}</strong></p>
+                <strong class="d-block">Market is Closed Today</strong>
+                <span class="small">Predicting for next session: <strong>{{ data.main.target_date }}</strong></span>
             </div>
         </div>
         {% endif %}

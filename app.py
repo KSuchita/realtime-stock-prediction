@@ -13,6 +13,7 @@ def get_base_data():
         return None, None
     df = pd.read_csv(PREDICTION_FILE).replace({np.nan: 'N/A'})
     if df.empty: return None, None
+    # Get the absolute latest data regardless of when it was run
     latest_date = df["Prediction_Date"].max()
     return df[df["Prediction_Date"] == latest_date], latest_date
 
@@ -20,9 +21,9 @@ def get_base_data():
 def index():
     latest_df, latest_date = get_base_data()
     if latest_df is None:
-        return "<h1>Data missing. Run realtime_predict.py first.</h1>"
+        return "<h1>Error: predictions.csv not found. Run realtime_predict.py first.</h1>"
 
-    # Holiday Detection
+    # NSE Holiday Logic for UI Banner
     nse = mcal.get_calendar('NSE')
     today = datetime.now().date()
     is_holiday = nse.schedule(start_date=today, end_date=today).empty
@@ -48,11 +49,10 @@ def index():
             "symbol": symbol, "actual": f"{actual:,.2f}", "pred": f"{pred:,.2f}",
             "yest_pred": yest_pred, "pct": round(move_pct, 2), 
             "theme": theme, "rating": rating, "target_date": row['Target_Date'],
-            "plan": f"AI models indicate a forecast velocity of {round(move_pct, 2)}% based on recent technical patterns."
+            "plan": f"The model predicts a movement of {round(move_pct, 2)}% based on current technical indicators."
         }
 
     dashboard_data = {
-        "run_date": latest_date,
         "is_holiday": is_holiday,
         "tickers": all_tickers,
         "main": process_stock(selected_ticker),
