@@ -14,14 +14,18 @@
         .main-content { margin-left: 300px; padding: 4rem; }
         .equal-height-row { display: flex; align-items: stretch; }
         .bento-card { background: white; border-radius: 28px; border: 1px solid rgba(226, 232, 240, 0.7); border-top: 5px solid var(--accent); padding: 2.5rem; box-shadow: 0 10px 30px rgba(0,0,0,0.03); height: 100%; display: flex; flex-direction: column; }
+        
         .price-text { font-weight: 800; letter-spacing: -1px; color: #0F172A; }
         .yest-price { font-size: 1.5rem; color: #0F172A !important; }
         .current-price { font-size: 1.8rem; }
         .target-price { font-size: 1.8rem; color: var(--accent); }
-        .badge-lux { padding: 0.6rem 1.2rem; border-radius: 12px; font-weight: 700; font-size: 0.75rem; text-transform: uppercase; }
-        .bg-success { background-color: #ECFDF5 !important; color: var(--bullish) !important; }
-        .bg-danger { background-color: #FFF1F2 !important; color: var(--bearish) !important; }
-        .bg-neutral { background-color: #F1F5F9 !important; color: var(--neutral-sage) !important; border: 1px solid #E2E8F0; }
+        
+        /* Updated Badge Colors */
+        .badge-lux { padding: 0.6rem 1.2rem; border-radius: 12px; font-weight: 700; font-size: 0.75rem; text-transform: uppercase; border: 1px solid transparent; }
+        .bg-success { background-color: #ECFDF5 !important; color: var(--bullish) !important; border-color: #10B981 !important; }
+        .bg-danger { background-color: #FFF1F2 !important; color: var(--bearish) !important; border-color: #FB7185 !important; }
+        .bg-neutral { background-color: #F8FAFC !important; color: var(--neutral-sage) !important; border-color: #E2E8F0 !important; }
+        
         .plan-box { background: #F8FAFC; border-radius: 20px; padding: 1.8rem; border-left: 5px solid #CBD5E1; margin-top: auto; }
         .form-select { border-radius: 12px; padding: 0.75rem; border: 1px solid #E2E8F0; font-weight: 600; }
         .holiday-alert { background: #FFFBEB; border: 1px solid #FEF3C7; color: #92400E; border-radius: 20px; padding: 1.5rem; margin-bottom: 2rem; display: flex; align-items: center; }
@@ -80,7 +84,7 @@
                             <div class="price-text current-price">₹{{ data.main.actual }}</div>
                         </div>
                         <div class="col-4">
-                            <span class="small fw-bold text-muted">NEXT TRADING DAY: {{ data.main.target_date }}</span>
+                            <span class="small fw-bold text-muted">TARGET: {{ data.main.target_date }}</span>
                             <div class="price-text target-price">₹{{ data.main.pred }}</div>
                         </div>
                     </div>
@@ -110,7 +114,7 @@
                             <div class="price-text current-price">₹{{ data.comp.actual }}</div>
                         </div>
                         <div class="col-4">
-                            <span class="small fw-bold text-muted">NEXT TRADING DAY: {{ data.comp.target_date }}</span>
+                            <span class="small fw-bold text-muted">TARGET: {{ data.comp.target_date }}</span>
                             <div class="price-text target-price">₹{{ data.comp.pred }}</div>
                         </div>
                     </div>

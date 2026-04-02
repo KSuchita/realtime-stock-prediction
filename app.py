@@ -13,7 +13,6 @@ def get_base_data():
         return None, None
     df = pd.read_csv(PREDICTION_FILE).replace({np.nan: 'N/A'})
     if df.empty: return None, None
-    # Get the absolute latest data regardless of when it was run
     latest_date = df["Prediction_Date"].max()
     return df[df["Prediction_Date"] == latest_date], latest_date
 
@@ -21,9 +20,8 @@ def get_base_data():
 def index():
     latest_df, latest_date = get_base_data()
     if latest_df is None:
-        return "<h1>Error: predictions.csv not found. Run realtime_predict.py first.</h1>"
+        return "<h1>Error: predictions.csv missing. Run realtime_predict.py first.</h1>"
 
-    # NSE Holiday Logic for UI Banner
     nse = mcal.get_calendar('NSE')
     today = datetime.now().date()
     is_holiday = nse.schedule(start_date=today, end_date=today).empty
@@ -42,14 +40,23 @@ def index():
         yest_pred = f"{float(yest_val):,.2f}" if yest_val != 'N/A' else "N/A"
         
         move_pct = ((pred - actual) / actual) * 100
-        theme = "success" if move_pct > 0.3 else "danger" if move_pct < -0.3 else "neutral"
-        rating = "Strong Buy" if move_pct > 0.5 else "Sell" if move_pct < -0.5 else "Hold"
+
+        # --- UPDATED RATING & COLOR LOGIC ---
+        if move_pct > 0.5:
+            theme = "success"        # Green
+            rating = "Strong Buy"
+        elif move_pct < -0.5:
+            theme = "danger"         # Red
+            rating = "Sell / Avoid"
+        else:
+            theme = "neutral"        # Grey
+            rating = "Neutral / Hold"
 
         return {
             "symbol": symbol, "actual": f"{actual:,.2f}", "pred": f"{pred:,.2f}",
             "yest_pred": yest_pred, "pct": round(move_pct, 2), 
             "theme": theme, "rating": rating, "target_date": row['Target_Date'],
-            "plan": f"The model predicts a movement of {round(move_pct, 2)}% based on current technical indicators."
+            "plan": f"Technical analysis suggests a forecast velocity of {round(move_pct, 2)}% for the upcoming session."
         }
 
     dashboard_data = {
